@@ -5,6 +5,7 @@ import cors from "cors";
 import * as trpcExpress from "@trpc/server/adapters/express";
 import { generateOpenApiDocument, createOpenApiExpressMiddleware } from "trpc-to-openapi";
 import { apiReference } from "@scalar/express-api-reference";
+import cookieParser from "cookie-parser";
 
 import { serverRouter, createContext } from "@repo/trpc/server";
 
@@ -12,7 +13,13 @@ import { env } from "./env";
 
 export const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:3000"], // Replace with your frontend URL
+    credentials: true, // Allow cookies to be sent
+  }),
+);
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
