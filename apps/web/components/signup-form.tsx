@@ -1,54 +1,54 @@
-"use client"
+"use client";
 
-import { useForm, SubmitHandler } from "react-hook-form"
-import { cn } from "~/lib/utils"
-import { Button } from "~/components/ui/button"
+import { useForm, SubmitHandler } from "react-hook-form";
+import { cn } from "~/lib/utils";
+import { Button } from "~/components/ui/button";
 import {
   Field,
   FieldDescription,
   FieldGroup,
   FieldLabel,
   FieldSeparator,
-} from "~/components/ui/field"
-import { Input } from "~/components/ui/input"
-import { trpc } from "~/trpc/client"
+} from "~/components/ui/field";
+import { Input } from "~/components/ui/input";
+import { useSignup } from "~/hooks/api/auth";
 
 interface SignupFormValues {
-  name: string
-  email: string
-  password: string
-  confirmPassword: string
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
 }
 
-export function SignupForm({
-  className,
-  ...props
-}: React.ComponentProps<"form">) {
-  const { mutateAsync: createUser, isPending } =
-    trpc.auth.createUserWithEmailAndPassword.useMutation()
+export function SignupForm({ className, ...props }: React.ComponentProps<"form">) {
+  const { createUserWithEmailAndPasswordAsync } = useSignup();
 
-  const { register, handleSubmit } = useForm<SignupFormValues>({
+  const {
+    register,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<SignupFormValues>({
     defaultValues: {
       name: "",
       email: "",
       password: "",
       confirmPassword: "",
     },
-  })
+  });
 
   const onSubmit: SubmitHandler<SignupFormValues> = async (data) => {
     try {
-      const result = await createUser({
+      const result = await createUserWithEmailAndPasswordAsync({
         fullName: data.name,
         email: data.email,
         password: data.password,
-      })
-      console.log("User created successfully with ID:", result.id)
-      console.log("Full response:", result)
+      });
+      console.log("User created successfully with ID:", result.id);
+      console.log("Full response:", result);
     } catch (error) {
-      console.error("Error creating user:", error)
+      console.error("Error creating user:", error);
     }
-  }
+  };
 
   return (
     <form
@@ -65,13 +65,7 @@ export function SignupForm({
         </div>
         <Field>
           <FieldLabel htmlFor="name">Full Name</FieldLabel>
-          <Input
-            id="name"
-            type="text"
-            placeholder="John Doe"
-            required
-            {...register("name")}
-          />
+          <Input id="name" type="text" placeholder="John Doe" required {...register("name")} />
         </Field>
         <Field>
           <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -83,35 +77,22 @@ export function SignupForm({
             {...register("email")}
           />
           <FieldDescription>
-            We&apos;ll use this to contact you. We will not share your email
-            with anyone else.
+            We&apos;ll use this to contact you. We will not share your email with anyone else.
           </FieldDescription>
         </Field>
         <Field>
           <FieldLabel htmlFor="password">Password</FieldLabel>
-          <Input
-            id="password"
-            type="password"
-            required
-            {...register("password")}
-          />
-          <FieldDescription>
-            Must be at least 8 characters long.
-          </FieldDescription>
+          <Input id="password" type="password" required {...register("password")} />
+          <FieldDescription>Must be at least 8 characters long.</FieldDescription>
         </Field>
         <Field>
           <FieldLabel htmlFor="confirm-password">Confirm Password</FieldLabel>
-          <Input
-            id="confirm-password"
-            type="password"
-            required
-            {...register("confirmPassword")}
-          />
+          <Input id="confirm-password" type="password" required {...register("confirmPassword")} />
           <FieldDescription>Please confirm your password.</FieldDescription>
         </Field>
         <Field>
-          <Button type="submit" disabled={isPending}>
-            {isPending ? "Creating Account..." : "Create Account"}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Creating Account..." : "Create Account"}
           </Button>
         </Field>
         <FieldSeparator>Or continue with</FieldSeparator>
@@ -131,5 +112,5 @@ export function SignupForm({
         </Field>
       </FieldGroup>
     </form>
-  )
+  );
 }
