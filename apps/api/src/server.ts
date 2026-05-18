@@ -11,21 +11,24 @@ import { serverRouter, createContext } from "@repo/trpc/server";
 import { env } from "./env";
 
 export const app = express();
+
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use((req, res, next) => {
+  logger.info(`${req.method} ${req.path}`, {
+    method: req.method,
+    url: req.url,
+  });
+  next();
+});
+
 const openApiDocument = generateOpenApiDocument(serverRouter, {
   title: "Streamyst OpenAPI",
   version: "1.0.0",
   baseUrl: env.BASE_URL.concat("/api"),
 });
-
-if (env.NODE_ENV !== "prod") {
-  app.use(
-    cors({
-      origin: "*",
-    }),
-  );
-}
-
-app.use(express.json());
 
 app.get("/", (req, res) => {
   return res.json({ message: "Streamyst is up and running..." });
@@ -44,16 +47,16 @@ logger.debug(`docs: ${env.BASE_URL}/docs`);
 app.use("/docs", apiReference({ url: "/openapi.json" }));
 
 app.use(
-  "/api",
-  createOpenApiExpressMiddleware({
+  "/trpc",
+  trpcExpress.createExpressMiddleware({
     router: serverRouter,
     createContext,
   }),
 );
 
 app.use(
-  "/trpc",
-  trpcExpress.createExpressMiddleware({
+  "/api",
+  createOpenApiExpressMiddleware({
     router: serverRouter,
     createContext,
   }),
