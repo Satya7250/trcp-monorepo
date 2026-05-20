@@ -3,11 +3,13 @@ import { generatePath } from "../../utils/path-generator";
 import {
   createUserWithEmailAndPasswordInputModel,
   createUserWithEmailAndPasswordOutputModel,
+  getLoggedInUserInfoInputModel,
+  getLoggedInUserInfoOutputModel,
   signInWithEmailAndPasswordInputModel,
   signInWithEmailAndPasswordOutputModel,
 } from "./model";
 import { userService } from "../../services/index";
-import { setAuthenticationCookie } from "../../utils/cookie";
+import { getAuthenticationCookie, setAuthenticationCookie } from "../../utils/cookie";
 
 const TAGS = ["Authentication"];
 const getPath = generatePath("/authentication");
@@ -61,6 +63,35 @@ export const authRouter = router({
       id
     }
 
+  }),
+
+  getLoggedInUserInfo: publicProcedure
+  .meta({
+    openapi: {
+      method: "GET",
+      path: getPath("/getLoggedInUserInfo"),
+      tags: TAGS,
+    },
   })
+  .input(getLoggedInUserInfoInputModel)
+  .output(getLoggedInUserInfoOutputModel)
+  .query(async ({ctx}) => {
+
+    const userToken = getAuthenticationCookie(ctx);
+    if (!userToken) throw new Error('user is not logged in');
+
+    const { id, email, fullName, profilePictureUrl } = await userService.verifyAndDecodeUserToken(userToken);
+    if (!id || !email || !fullName) {
+      throw new Error('invalid user token');
+    }
+
+    return {
+      id,
+      email,
+      fullName,
+      profilePictureUrl: profilePictureUrl ?? undefined,
+    };
+
+  }),
 
 });

@@ -5,7 +5,6 @@ import { usersTable } from '@repo/database/models/user';
 
 import { type CreateUserWithEmailAndPasswordInputType, GenerateUserTokenPayloadType, createUserWithEmailAndPasswordInput, generateUserTokenPayload, signInUserWithEmailAndPasswordInput, type SignInUserWithEmailAndPasswordInputType } from "./model"
 import { env } from '../env';
-import { create } from 'node:domain';
 
 class UserService {
 
@@ -21,6 +20,28 @@ class UserService {
         const token = JWT.sign({ id }, env.JWT_SECRET)
         return { token };
     };
+
+    private async verifyUserToken(token: string): Promise<GenerateUserTokenPayloadType> {
+        try {
+            const verificationResult = JWT.verify(token, env.JWT_SECRET) as GenerateUserTokenPayloadType;
+            return verificationResult;
+        } catch (error) {
+            throw new Error("Invalid or expired token");
+        }
+    }
+
+    private async getUserInfoById(id: string) {
+        const user = await db.select({
+            id: usersTable.id,
+            email: usersTable.email,
+            fullName: usersTable.fullName,
+            profilePictureUrl: usersTable.profileImageUrl,
+        }).from(usersTable).where(eq(usersTable.id, id));
+
+        if(!user || user.length === 0) throw new Error(`User with id ${id} not found`);
+        
+        return user[0];
+    }
 
     private async generateHash(salt: string, password: string) {
         return createHmac('sha256', salt).update(password).digest('hex');
@@ -72,6 +93,13 @@ class UserService {
             token
         }
     }
+
+    public async verifyAndDecodeUserToken(token: string) {
+        const { id } = await this.verifyUserToken(token);
+        const userInfo = await this.getUserInfoById(id);
+        return {...userInfo};
+    }
+
 }
 
 export default UserService
