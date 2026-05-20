@@ -15,6 +15,13 @@
       "when": 1778995298764,
       "tag": "0001_classy_frightful_four",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779291134888,
+      "tag": "0002_sharp_shadow_king",
+      "breakpoints": true
     }
   ]
 }
