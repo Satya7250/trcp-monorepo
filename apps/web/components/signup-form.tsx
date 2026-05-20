@@ -12,6 +12,7 @@ import {
 } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
 import { useSignup } from "~/hooks/api/auth";
+import { useRouter } from "next/navigation";
 
 interface SignupFormValues {
   name: string;
@@ -22,7 +23,7 @@ interface SignupFormValues {
 
 export function SignupForm({ className, ...props }: React.ComponentProps<"form">) {
   const { createUserWithEmailAndPasswordAsync } = useSignup();
-
+  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -43,6 +44,7 @@ export function SignupForm({ className, ...props }: React.ComponentProps<"form">
         email: data.email,
         password: data.password,
       });
+      router.replace("/dashboard");
       console.log("User created successfully with ID:", result.id);
       console.log("Full response:", result);
     } catch (error) {
