@@ -1,4 +1,4 @@
-import { publicProcedure, router } from "../../trpc";
+import { authenticatedProcedure, publicProcedure, router } from "../../trpc";
 import { generatePath } from "../../utils/path-generator";
 import {
   createUserWithEmailAndPasswordInputModel,
@@ -65,7 +65,7 @@ export const authRouter = router({
 
   }),
 
-  getLoggedInUserInfo: publicProcedure
+  getLoggedInUserInfo: authenticatedProcedure
   .meta({
     openapi: {
       method: "GET",
@@ -77,10 +77,11 @@ export const authRouter = router({
   .output(getLoggedInUserInfoOutputModel)
   .query(async ({ctx}) => {
 
-    const userToken = getAuthenticationCookie(ctx);
-    if (!userToken) throw new Error('user is not logged in');
-
-    const { id, email, fullName, profilePictureUrl } = await userService.verifyAndDecodeUserToken(userToken);
+    const userInfo = await userService.getUserInfoById(ctx.user.id);
+    if (!userInfo) {
+      throw new Error('invalid user token');
+    }
+    const { id, email, fullName, profilePictureUrl } = userInfo;
     if (!id || !email || !fullName) {
       throw new Error('invalid user token');
     }
