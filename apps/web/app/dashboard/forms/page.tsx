@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { PlusIcon, FileTextIcon } from "lucide-react"
+import { PlusIcon, FileTextIcon, ExternalLinkIcon } from "lucide-react"
+import Link from "next/link"
 import { toast } from "sonner"
 import { useCreateForm, useMyForms } from "~/hooks/api/form"
 import { Button } from "~/components/ui/button"
@@ -17,7 +18,14 @@ import {
 import { Input } from "~/components/ui/input"
 import { Label } from "~/components/ui/label"
 import { Textarea } from "~/components/ui/textarea"
-import { Card, CardHeader, CardTitle, CardDescription } from "~/components/ui/card"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "~/components/ui/table"
 import { Spinner } from "~/components/ui/spinner"
 
 export default function FormsPage() {
@@ -121,25 +129,48 @@ export default function FormsPage() {
           <Spinner className="size-8" />
         </div>
       ) : forms && forms.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {forms.map((form) => (
-            <Card key={form.id} className="hover:border-primary/50 transition-colors cursor-pointer">
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <FileTextIcon className="size-4 text-primary" />
-                  <CardTitle className="truncate">{form.title}</CardTitle>
-                </div>
-                {form.description && (
-                  <CardDescription className="line-clamp-2">
-                    {form.description}
-                  </CardDescription>
-                )}
-                <div className="text-xs text-muted-foreground pt-2">
-                  Created {form.createdAt ? new Date(form.createdAt).toLocaleDateString() : 'recently'}
-                </div>
-              </CardHeader>
-            </Card>
-          ))}
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[400px]">Title</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead className="w-[150px]">Created At</TableHead>
+                <TableHead className="w-[100px] text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {forms.map((form) => (
+                <TableRow key={form.id}>
+                  <TableCell className="font-medium">
+                    <Link 
+                      href={`/dashboard/forms/${form.id}`}
+                      className="flex items-center gap-2 hover:underline text-primary"
+                    >
+                      <FileTextIcon className="size-4" />
+                      {form.title}
+                    </Link>
+                  </TableCell>
+                  <TableCell>
+                    <span className="line-clamp-1 text-muted-foreground">
+                      {form.description || "No description"}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    {form.createdAt ? new Date(form.createdAt).toLocaleDateString() : 'recently'}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link href={`/dashboard/forms/${form.id}`}>
+                        <ExternalLinkIcon className="mr-2 size-4" />
+                        Build
+                      </Link>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       ) : (
         <div className="rounded-lg border border-dashed p-12 text-center">
