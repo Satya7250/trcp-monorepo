@@ -1,6 +1,14 @@
-import { db, eq } from '@repo/database';
+import { asc, db, eq } from '@repo/database';
+import { formFieldsTable } from '@repo/database/models/form-field';
 import { formsTable } from '@repo/database/models/form';
-import { createFormInput, type CreateFormInputType, listFormByUserIdInput, type ListFormByUserIdInputType } from "./model";
+import {
+    createFormInput,
+    type CreateFormInputType,
+    getFormByFormIdInput,
+    type GetFormByFormIdInputType,
+    listFormByUserIdInput,
+    type ListFormByUserIdInputType,
+} from "./model";
 
 class FormService {
     /**
@@ -72,11 +80,74 @@ class FormService {
             updatedAt: formsTable.updatedAt,
         }).from(formsTable).where(eq(formsTable.id, id));
 
-        if (!result || result.length === 0) {
+        const form = result[0];
+        if (!form) {
             throw new Error(`Form with id ${id} not found`);
         }
 
-        return result[0];
+        return form;
+    }
+
+    /**
+     * Retrieves a form by ID for public sharing (excludes owner metadata).
+     * @param formId - The UUID of the form
+     */
+    public async getFormByFormId(formId: GetFormByFormIdInputType) {
+        const validatedFormId = await getFormByFormIdInput.parseAsync(formId);
+
+        const rows = await db
+            .select({
+                id: formsTable.id,
+                title: formsTable.title,
+                description: formsTable.discription,
+                createdAt: formsTable.createdAt,
+                updatedAt: formsTable.updatedAt,
+                field: {
+                    id: formFieldsTable.id,
+                    label: formFieldsTable.label,
+                    labelKey: formFieldsTable.labelKey,
+                    description: formFieldsTable.description,
+                    placeholder: formFieldsTable.placeholder,
+                    isRequired: formFieldsTable.isRequired,
+                    index: formFieldsTable.index,
+                    type: formFieldsTable.type,
+                    createdAt: formFieldsTable.createdAt,
+                    updatedAt: formFieldsTable.updatedAt,
+                },
+            })
+            .from(formsTable)
+            .leftJoin(formFieldsTable, eq(formFieldsTable.formId, formsTable.id))
+            .where(eq(formsTable.id, validatedFormId))
+            .orderBy(asc(formFieldsTable.index));
+
+        const firstRow = rows[0];
+        if (!firstRow) {
+            throw new Error(`Form with id ${validatedFormId} not found`);
+        }
+
+        const fields = rows
+            .filter((row) => row.field?.id != null)
+            .map((row) => ({
+                id: row.field!.id,
+                label: row.field!.label,
+                labelKey: row.field!.labelKey,
+                description: row.field!.description ?? null,
+                placeholder: row.field!.placeholder ?? null,
+                isRequired: row.field!.isRequired,
+                index: String(row.field!.index),
+                type: row.field!.type,
+                createdAt: row.field!.createdAt ?? null,
+                updatedAt: row.field!.updatedAt ?? null,
+            }));
+
+        return {
+            id: firstRow.id,
+            title: firstRow.title,
+            description: firstRow.description,
+            createdAt: firstRow.createdAt,
+            updatedAt: firstRow.updatedAt,
+            fields,
+        };
     }
 
     /**

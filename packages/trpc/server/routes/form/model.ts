@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { fieldTypeEnum } from '@repo/services/form-field';
 
 export const createFormInputModel = z.object({
     title: z.string().min(1).max(100).describe('Title of the form'),
@@ -35,4 +36,30 @@ export const getFormByIdOutputModel = z.object({
     createdBy: z.string().describe('UUID of the user who created the form').nullable(),
     createdAt: z.date().describe('Date the form was created').nullable(),
     updatedAt: z.date().describe('Date the form was last updated').nullable(),
+});
+
+export const getFormByFormIdInputModel = z.object({
+    formId: z.string().uuid().describe('ID of the form to retrieve for public sharing'),
+});
+
+const publicFormFieldModel = z.object({
+    id: z.string().uuid().describe('The ID of the field'),
+    label: z.string().describe('The display label for the field'),
+    labelKey: z.string().describe('The slug version of the label'),
+    description: z.string().nullable().describe('An optional description for the field'),
+    placeholder: z.string().nullable().describe('An optional placeholder for the field'),
+    isRequired: z.boolean().describe('Whether the field is required'),
+    index: z.string().describe('Fractional index for sorting'),
+    type: fieldTypeEnum.describe('The type of the field'),
+    createdAt: z.date().nullable().describe('The date the field was created'),
+    updatedAt: z.date().nullable().describe('The date the field was last updated'),
+});
+
+export const getFormByFormIdOutputModel = z.object({
+    id: z.string().describe('ID of the form'),
+    title: z.string().describe('Title of the form'),
+    description: z.string().describe('Description of the form').nullable(),
+    createdAt: z.date().describe('Date the form was created').nullable(),
+    updatedAt: z.date().describe('Date the form was last updated').nullable(),
+    fields: z.array(publicFormFieldModel).describe('Form fields ordered by index'),
 });
