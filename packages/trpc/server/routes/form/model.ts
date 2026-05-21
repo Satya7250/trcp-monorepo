@@ -8,3 +8,14 @@ export const createFormInputModel = z.object({
 export const createFormOutputModel = z.object({
     id: z.string().describe('ID of the created form'),
 });
+
+export const listMyFormsInputModel = z.undefined();
+
+export const listMyFormsOutputModel = z.array(z.object({
+    id: z.string().describe('ID of the form'),
+    title: z.string().describe('Title of the form'),
+    description: z.string().describe('Description of the form').nullable(),
+    createdBy: z.string().describe('UUID of the user who created the form').nullable(),
+    createdAt: z.date().describe('Date the form was created').nullable(),
+    updatedAt: z.date().describe('Date the form was last updated').nullable(),
+}));
