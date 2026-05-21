@@ -6,7 +6,7 @@ import {
   boolean,
   text,
 } from "drizzle-orm/pg-core";
-import { usersTable } from "../schema";
+import { usersTable } from "./user";
 
 export const formsTable = pgTable("forms", {
     id: uuid("id").primaryKey().defaultRandom(),

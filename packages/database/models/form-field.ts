@@ -9,7 +9,7 @@ import {
   pgEnum,
   unique,
 } from "drizzle-orm/pg-core";
-import { formsTable, usersTable } from "../schema";
+import { formsTable } from "./form";
 
 
 export const fieldTypesEnum = pgEnum("field_types", ['TEXT', 'NUMBER', 'EMAIL', 'YES_NO', 'PASSWORD']);
