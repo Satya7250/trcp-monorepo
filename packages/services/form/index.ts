@@ -52,6 +52,23 @@ class FormService {
 
         return result;
     }
+
+    /**
+     * Lists all forms in the database.
+     * @returns A list of all forms
+     */
+    public async listForms() {
+        const result = await db.select({
+            id: formsTable.id,
+            title: formsTable.title,
+            description: formsTable.discription,
+            createdBy: formsTable.cratedBy,
+            createdAt: formsTable.createdAt,
+            updatedAt: formsTable.updatedAt,
+        }).from(formsTable);
+
+        return result;
+    }
 }
 
 export default FormService;

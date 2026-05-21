@@ -19,3 +19,7 @@ export const listMyFormsOutputModel = z.array(z.object({
     createdAt: z.date().describe('Date the form was created').nullable(),
     updatedAt: z.date().describe('Date the form was last updated').nullable(),
 }));
+
+export const listFormsInputModel = z.undefined();
+
+export const listFormsOutputModel = listMyFormsOutputModel;

@@ -1,6 +1,6 @@
-import { authenticatedProcedure, router } from "../../trpc";
+import { authenticatedProcedure, publicProcedure, router } from "../../trpc";
 import { generatePath } from "../../utils/path-generator";
-import { createFormInputModel, createFormOutputModel, listMyFormsInputModel, listMyFormsOutputModel } from "./model";
+import { createFormInputModel, createFormOutputModel, listMyFormsInputModel, listMyFormsOutputModel, listFormsInputModel, listFormsOutputModel } from "./model";
 import { formService } from "../../services/index";
 
 const TAGS = ["Form"];
@@ -44,6 +44,21 @@ export const formRouter = router({
     .output(listMyFormsOutputModel)
     .query(async ({ ctx }) => {
       const result = await formService.listFormByUserId(ctx.user.id);
+      return result;
+    }),
+
+  listForms: publicProcedure
+    .meta({
+      openapi: {
+        method: "GET",
+        path: getPath("/listForms"),
+        tags: TAGS,
+      },
+    })
+    .input(listFormsInputModel)
+    .output(listFormsOutputModel)
+    .query(async () => {
+      const result = await formService.listForms();
       return result;
     }),
 });
