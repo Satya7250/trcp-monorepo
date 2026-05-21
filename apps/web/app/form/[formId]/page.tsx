@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useParams } from "next/navigation"
 import { toast } from "sonner"
 import { useFormByFormId } from "~/hooks/api/form"
+import { useSubmitForm } from "~/hooks/api/form-submission"
 import { Button } from "~/components/ui/button"
 import { Input } from "~/components/ui/input"
 import { Label } from "~/components/ui/label"
@@ -32,7 +33,7 @@ function FormFieldInput({
   value: string | boolean
   onChange: (value: string | boolean) => void
 }) {
-  const id = field.labelKey
+  const id = field.id
 
   if (field.type === "YES_NO") {
     return (
@@ -88,13 +89,15 @@ export default function PublicFormPage() {
   const formId = params.formId as string
 
   const { form, isLoading, error } = useFormByFormId(formId)
+  const { submitFormAsync, isPending: isSubmitting } = useSubmitForm()
   const [values, setValues] = useState<Record<string, string | boolean>>({})
+  const [isSubmitted, setIsSubmitted] = useState(false)
 
-  const setFieldValue = (labelKey: string, value: string | boolean) => {
-    setValues((prev) => ({ ...prev, [labelKey]: value }))
+  const setFieldValue = (fieldId: string, value: string | boolean) => {
+    setValues((prev) => ({ ...prev, [fieldId]: value }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!form) return
@@ -102,9 +105,9 @@ export default function PublicFormPage() {
     const missing = form.fields.filter(
       (field) =>
         field.isRequired &&
-        (values[field.labelKey] === undefined ||
-          values[field.labelKey] === "" ||
-          values[field.labelKey] === false)
+        (values[field.id] === undefined ||
+          values[field.id] === "" ||
+          values[field.id] === false)
     )
 
     if (missing.length > 0) {
@@ -112,8 +115,23 @@ export default function PublicFormPage() {
       return
     }
 
-    toast.success("Form submitted (submission API not wired yet)")
-    console.log("Form values:", values)
+    try {
+      await submitFormAsync({
+        formId,
+        values: form.fields.map((field) => ({
+          formFieldId: field.id,
+          value:
+            field.type === "YES_NO"
+              ? String(values[field.id] === true)
+              : String(values[field.id] ?? ""),
+        })),
+      })
+      setIsSubmitted(true)
+      toast.success("Form submitted successfully")
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to submit form"
+      toast.error(message)
+    }
   }
 
   if (isLoading) {
@@ -135,6 +153,23 @@ export default function PublicFormPage() {
     )
   }
 
+  if (isSubmitted) {
+    return (
+      <div className="min-h-svh bg-muted/30 px-4 py-10">
+        <div className="mx-auto w-full max-w-lg">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Thank you</CardTitle>
+              <CardDescription>
+                Your response to &quot;{form.title}&quot; has been recorded.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-svh bg-muted/30 px-4 py-10">
       <div className="mx-auto w-full max-w-lg">
@@ -152,8 +187,8 @@ export default function PublicFormPage() {
                   <FormFieldInput
                     key={field.id}
                     field={field as PublicField}
-                    value={values[field.labelKey] ?? (field.type === "YES_NO" ? false : "")}
-                    onChange={(value) => setFieldValue(field.labelKey, value)}
+                    value={values[field.id] ?? (field.type === "YES_NO" ? false : "")}
+                    onChange={(value) => setFieldValue(field.id, value)}
                   />
                 ))
               ) : (
@@ -163,8 +198,8 @@ export default function PublicFormPage() {
               )}
 
               {form.fields.length > 0 && (
-                <Button type="submit" className="w-full">
-                  Submit
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? "Submitting..." : "Submit"}
                 </Button>
               )}
             </form>
