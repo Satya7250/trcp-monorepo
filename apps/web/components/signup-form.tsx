@@ -13,6 +13,8 @@ import {
 import { Input } from "~/components/ui/input";
 import { useSignup } from "~/hooks/api/auth";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import Link from "next/link";
 
 interface SignupFormValues {
   name: string;
@@ -39,16 +41,21 @@ export function SignupForm({ className, ...props }: React.ComponentProps<"form">
 
   const onSubmit: SubmitHandler<SignupFormValues> = async (data) => {
     try {
-      const result = await createUserWithEmailAndPasswordAsync({
+      if (data.password !== data.confirmPassword) {
+        toast.error("Passwords do not match");
+        return;
+      }
+
+      await createUserWithEmailAndPasswordAsync({
         fullName: data.name,
         email: data.email,
         password: data.password,
       });
+      toast.success("Account created successfully");
       router.replace("/dashboard");
-      console.log("User created successfully with ID:", result.id);
-      console.log("Full response:", result);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating user:", error);
+      toast.error(error.message || "Failed to create account");
     }
   };
 
@@ -109,7 +116,7 @@ export function SignupForm({ className, ...props }: React.ComponentProps<"form">
             Sign up with GitHub
           </Button>
           <FieldDescription className="px-6 text-center">
-            Already have an account? <a href="#">Sign in</a>
+            Already have an account? <Link href="/login" className="underline underline-offset-4">Sign in</Link>
           </FieldDescription>
         </Field>
       </FieldGroup>

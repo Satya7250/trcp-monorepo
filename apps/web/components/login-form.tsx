@@ -1,7 +1,7 @@
 "use client"
 
 import { useForm, SubmitHandler } from "react-hook-form"
-import {useRouter} from 'next/navigation'
+import { useRouter } from "next/navigation"
 import { useSignIn } from "~/hooks/api/auth"
 import { cn } from "~/lib/utils"
 import { Button } from "~/components/ui/button"
@@ -19,6 +19,8 @@ import {
   FieldLabel,
 } from "~/components/ui/field"
 import { Input } from "~/components/ui/input"
+import { toast } from "sonner"
+import Link from "next/link"
 
 interface LoginFormInputs {
   email: string
@@ -30,7 +32,8 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<"div">) {
 
-  const { signInWithEmailAndPasswordAsync } = useSignIn()
+  const { signInWithEmailAndPasswordAsync, status } = useSignIn()
+  const isSubmitting = status === "pending"
   const router = useRouter();
   const { register, handleSubmit } = useForm<LoginFormInputs>({
     defaultValues: {
@@ -39,13 +42,18 @@ export function LoginForm({
     },
   })
 
-  const onSubmit: SubmitHandler<LoginFormInputs> =async (data) => {
-    console.log("Login Form Values:", data)
-    const { id } = await signInWithEmailAndPasswordAsync({
-      email: data.email,
-      password: data.password
-    });
-    router.replace(`/dashboard`)
+  const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
+    try {
+      await signInWithEmailAndPasswordAsync({
+        email: data.email,
+        password: data.password
+      });
+      toast.success("Login successful")
+      router.replace(`/dashboard`)
+    } catch (error: any) {
+      console.error("Login Error:", error)
+      toast.error(error.message || "Invalid email or password")
+    }
   }
 
   return (
@@ -67,6 +75,7 @@ export function LoginForm({
                   type="email"
                   placeholder="m@example.com"
                   required
+                  disabled={isSubmitting}
                   {...register("email", { required: "Email is required" })}
                 />
               </Field>
@@ -84,16 +93,19 @@ export function LoginForm({
                   id="password"
                   type="password"
                   required
+                  disabled={isSubmitting}
                   {...register("password", { required: "Password is required" })}
                 />
               </Field>
               <Field>
-                <Button type="submit">Login</Button>
-                <Button variant="outline" type="button">
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Logging in..." : "Login"}
+                </Button>
+                <Button variant="outline" type="button" disabled={isSubmitting}>
                   Login with Google
                 </Button>
                 <FieldDescription className="text-center">
-                  Don&apos;t have an account? <a href="#">Sign up</a>
+                  Don&apos;t have an account? <Link href="/signup" className="underline underline-offset-4">Sign up</Link>
                 </FieldDescription>
               </Field>
             </FieldGroup>

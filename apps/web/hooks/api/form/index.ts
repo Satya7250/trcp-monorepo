@@ -46,6 +46,21 @@ export const useMyForms = () => {
     }
 }
 
+export const useForm = (id: string) => {
+    const { data: form, error, isFetched, isFetching, isLoading, status } = trpc.form.getFormById.useQuery({ id }, {
+        enabled: !!id
+    });
+
+    return {
+        form,
+        error,
+        isFetched,
+        isFetching,
+        isLoading,
+        status
+    }
+}
+
 export const useAllForms = () => {
     const { data: forms, error, isFetched, isFetching, isLoading, status } = trpc.form.listForms.useQuery();
 

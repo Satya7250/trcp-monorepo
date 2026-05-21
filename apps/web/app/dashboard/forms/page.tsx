@@ -54,8 +54,8 @@ export default function FormsPage() {
       setOpen(false)
       setTitle("")
       setDescription("")
-    } catch (error) {
-      toast.error("Failed to create form")
+    } catch (error: any) {
+      toast.error(error.message || "Failed to create form")
       console.error(error)
     }
   }

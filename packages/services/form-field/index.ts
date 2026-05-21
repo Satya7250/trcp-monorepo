@@ -75,11 +75,11 @@ class FormFieldService {
     /**
      * Deletes a form field.
      */
-    public async deleteField(id: DeleteFormFieldInputType) {
-        const validatedId = await deleteFormFieldInput.parseAsync(id);
+    public async deleteField(payload: DeleteFormFieldInputType) {
+        const validated = await deleteFormFieldInput.parseAsync(payload);
 
         const result = await db.delete(formFieldsTable)
-            .where(eq(formFieldsTable.id, validatedId))
+            .where(eq(formFieldsTable.id, validated.id))
             .returning({
                 id: formFieldsTable.id,
             });
@@ -115,15 +115,16 @@ class FormFieldService {
     /**
      * Retrieves all fields for a specific form, ordered by index.
      */
-    public async getFields(formId: GetFormFieldsInputType) {
-        const validatedFormId = await getFormFieldsInput.parseAsync(formId);
+    public async getFields(payload: GetFormFieldsInputType) {
+        const validated = await getFormFieldsInput.parseAsync(payload);
 
         const result = await db.select().from(formFieldsTable)
-            .where(eq(formFieldsTable.formId, validatedFormId))
+            .where(eq(formFieldsTable.formId, validated.formId))
             .orderBy(asc(formFieldsTable.index));
 
         return result;
     }
 }
 
+export * from "./model";
 export default FormFieldService;

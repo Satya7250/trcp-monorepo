@@ -6,14 +6,15 @@ interface CreateTRPCHttpBatchClientClientOpts {
 }
 
 export const createTRPCHttpBatchClientClient = (opts?: CreateTRPCHttpBatchClientClientOpts) => {
-  const link = opts?.enableStreaming ? httpLink : httpBatchLink;
+  // Use httpLink instead of httpBatchLink for better reliability with cookies in dev
+  const link = httpLink;
   
   return link({
     url: env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/trpc",
     fetch(url, options) {
       return fetch(url, {
         ...options,
-        credentials: "include", // Include cookies in requests
+        credentials: "include",
       });
     },
   });

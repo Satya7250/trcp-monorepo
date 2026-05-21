@@ -9,26 +9,30 @@ class FormService {
      * @returns The ID of the newly created form
      */
     public async createForm(payload: CreateFormInputType) {
-        // Validate the input using Zod
-        const { title, description, createdBy } = await createFormInput.parseAsync(payload);
+        try {
+            // Validate the input using Zod
+            const { title, description, createdBy } = await createFormInput.parseAsync(payload);
 
-        // Insert into the database
-        // Note: Using 'discription' and 'cratedBy' to match the database model schema
-        const result = await db.insert(formsTable).values({
-            title,
-            discription: description, 
-            cratedBy: createdBy,
-        }).returning({
-            id: formsTable.id,
-        });
+            // Insert into the database
+            const result = await db.insert(formsTable).values({
+                title,
+                discription: description ?? null, 
+                cratedBy: createdBy,
+            }).returning({
+                id: formsTable.id,
+            });
 
-        if (!result || result.length === 0 || !result[0]?.id) {
-            throw new Error('Failed to create form');
+            if (!result || result.length === 0 || !result[0]?.id) {
+                throw new Error('Database insert failed to return an ID');
+            }
+
+            return {
+                id: result[0].id,
+            };
+        } catch (error: any) {
+            console.error('Error in FormService.createForm:', error);
+            throw new Error(`Failed to create form: ${error.message}`);
         }
-
-        return {
-            id: result[0].id,
-        };
     }
 
     /**
@@ -51,6 +55,28 @@ class FormService {
         }).from(formsTable).where(eq(formsTable.cratedBy, validatedUserId));
 
         return result;
+    }
+
+    /**
+     * Retrieves a single form by its ID.
+     * @param id - The UUID of the form
+     * @returns The form details
+     */
+    public async getFormById(id: string) {
+        const result = await db.select({
+            id: formsTable.id,
+            title: formsTable.title,
+            description: formsTable.discription,
+            createdBy: formsTable.cratedBy,
+            createdAt: formsTable.createdAt,
+            updatedAt: formsTable.updatedAt,
+        }).from(formsTable).where(eq(formsTable.id, id));
+
+        if (!result || result.length === 0) {
+            throw new Error(`Form with id ${id} not found`);
+        }
+
+        return result[0];
     }
 
     /**

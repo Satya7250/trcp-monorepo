@@ -26,10 +26,14 @@ export const updateFormFieldInput = z.object({
 
 export type UpdateFormFieldInputType = z.infer<typeof updateFormFieldInput>;
 
-export const deleteFormFieldInput = z.string().uuid().describe('The ID of the field to delete');
+export const deleteFormFieldInput = z.object({
+    id: z.string().uuid().describe('The ID of the field to delete'),
+});
 
 export type DeleteFormFieldInputType = z.infer<typeof deleteFormFieldInput>;
 
-export const getFormFieldsInput = z.string().uuid().describe('The ID of the form to get fields for');
+export const getFormFieldsInput = z.object({
+    formId: z.string().uuid().describe('The ID of the form to get fields for'),
+});
 
 export type GetFormFieldsInputType = z.infer<typeof getFormFieldsInput>;
