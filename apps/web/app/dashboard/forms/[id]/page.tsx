@@ -7,7 +7,8 @@ import {
   Trash2Icon, 
   ChevronLeftIcon,
   Settings2Icon,
-  GripVerticalIcon
+  GripVerticalIcon,
+  TableIcon,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useForm } from "~/hooks/api/form"
@@ -139,7 +140,14 @@ export default function FormBuilderPage() {
           </div>
         </div>
         
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" asChild>
+            <Link href={`/dashboard/forms/${formId}/submissions`}>
+              <TableIcon className="mr-2 size-4" />
+              Submissions
+            </Link>
+          </Button>
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogTrigger asChild>
             <Button>
               <PlusIcon className="mr-2 size-4" />
@@ -217,6 +225,7 @@ export default function FormBuilderPage() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="max-w-2xl mx-auto space-y-4">

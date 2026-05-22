@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { fieldTypeEnum } from '@repo/services/form-field';
+import { getFormSubmissionsByFormIdInput } from '@repo/services/form-submission';
 
 export const createFormInputModel = z.object({
     title: z.string().min(1).max(100).describe('Title of the form'),
@@ -63,3 +64,20 @@ export const getFormByFormIdOutputModel = z.object({
     updatedAt: z.date().describe('Date the form was last updated').nullable(),
     fields: z.array(publicFormFieldModel).describe('Form fields ordered by index'),
 });
+
+export const getFormSubmissionsInputModel = getFormSubmissionsByFormIdInput;
+
+const formSubmissionValueModel = z.object({
+    formFieldId: z.string().uuid().describe('The ID of the form field'),
+    value: z.string().describe('The submitted value'),
+});
+
+export const getFormSubmissionsOutputModel = z.array(
+    z.object({
+        id: z.string().uuid().describe('The ID of the submission'),
+        formId: z.string().uuid().nullable().describe('The ID of the form'),
+        values: z.array(formSubmissionValueModel).describe('Submitted field values'),
+        createdAt: z.date().nullable().describe('When the submission was created'),
+        updatedAt: z.date().nullable().describe('When the submission was last updated'),
+    })
+);

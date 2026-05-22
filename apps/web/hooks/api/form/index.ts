@@ -89,3 +89,17 @@ export const useAllForms = () => {
         status
     }
 }
+
+export const useFormSubmissions = (formId: string) => {
+    const { data: submissions, error, isFetched, isFetching, isLoading, status } =
+        trpc.form.getFormSubmissions.useQuery({ formId }, { enabled: !!formId });
+
+    return {
+        submissions,
+        error,
+        isFetched,
+        isFetching,
+        isLoading,
+        status,
+    };
+};

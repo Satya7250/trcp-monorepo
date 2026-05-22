@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import { authenticatedProcedure, publicProcedure, router } from "../../trpc";
 import { generatePath } from "../../utils/path-generator";
 import {
@@ -7,12 +8,14 @@ import {
   getFormByFormIdOutputModel,
   getFormByIdInputModel,
   getFormByIdOutputModel,
+  getFormSubmissionsInputModel,
+  getFormSubmissionsOutputModel,
   listFormsInputModel,
   listFormsOutputModel,
   listMyFormsInputModel,
   listMyFormsOutputModel,
 } from "./model";
-import { formService } from "../../services/index";
+import { formService, formSubmissionService } from "../../services/index";
 
 const TAGS = ["Form"];
 const getPath = generatePath("/form");
@@ -84,6 +87,31 @@ export const formRouter = router({
     .query(async ({ ctx }) => {
       const result = await formService.listFormByUserId(ctx.user.id);
       return result;
+    }),
+
+  getFormSubmissions: authenticatedProcedure
+    .meta({
+      openapi: {
+        method: "GET",
+        path: getPath("/getFormSubmissions"),
+        tags: TAGS,
+      },
+    })
+    .input(getFormSubmissionsInputModel)
+    .output(getFormSubmissionsOutputModel)
+    .query(async ({ input, ctx }) => {
+      const form = await formService.getFormById(input.formId);
+
+      if (form.createdBy !== ctx.user.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have access to this form's submissions",
+        });
+      }
+
+      return await formSubmissionService.getFormSubmissionsByFormId({
+        formId: input.formId,
+      });
     }),
 
   listForms: publicProcedure

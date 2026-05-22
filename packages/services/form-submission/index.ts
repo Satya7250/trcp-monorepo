@@ -1,12 +1,17 @@
 import { z } from 'zod';
-import { db, eq } from '@repo/database';
+import { db, desc, eq } from '@repo/database';
 import { formFieldsTable } from '@repo/database/models/form-field';
 import {
     formSubmissionTable,
     type FormSubmissionValueRow,
 } from '@repo/database/models/form-submission';
 import { formsTable } from '@repo/database/models/form';
-import { submitFormInput, type SubmitFormInputType } from './model';
+import {
+    getFormSubmissionsByFormIdInput,
+    type GetFormSubmissionsByFormIdInputType,
+    submitFormInput,
+    type SubmitFormInputType,
+} from './model';
 
 const zodEmail = z.string().email();
 
@@ -90,6 +95,42 @@ class FormSubmissionService {
         }
 
         return { id: submission.id };
+    }
+
+    /**
+     * Lists all submissions for a form, newest first.
+     */
+    public async getFormSubmissionsByFormId(payload: GetFormSubmissionsByFormIdInputType) {
+        const { formId } = await getFormSubmissionsByFormIdInput.parseAsync(payload);
+
+        const form = await db
+            .select({ id: formsTable.id })
+            .from(formsTable)
+            .where(eq(formsTable.id, formId));
+
+        if (!form[0]) {
+            throw new Error(`Form with id ${formId} not found`);
+        }
+
+        const submissions = await db
+            .select({
+                id: formSubmissionTable.id,
+                formId: formSubmissionTable.formId,
+                values: formSubmissionTable.values,
+                createdAt: formSubmissionTable.createdAt,
+                updatedAt: formSubmissionTable.updatedAt,
+            })
+            .from(formSubmissionTable)
+            .where(eq(formSubmissionTable.formId, formId))
+            .orderBy(desc(formSubmissionTable.createdAt));
+
+        return submissions.map((submission) => ({
+            id: submission.id,
+            formId: submission.formId,
+            values: submission.values ?? [],
+            createdAt: submission.createdAt,
+            updatedAt: submission.updatedAt,
+        }));
     }
 }
 

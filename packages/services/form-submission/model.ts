@@ -13,3 +13,11 @@ export const submitFormInput = z.object({
 });
 
 export type SubmitFormInputType = z.infer<typeof submitFormInput>;
+
+export const getFormSubmissionsByFormIdInput = z.object({
+    formId: z.string().uuid().describe('The ID of the form to list submissions for'),
+});
+
+export type GetFormSubmissionsByFormIdInputType = z.infer<
+    typeof getFormSubmissionsByFormIdInput
+>;
